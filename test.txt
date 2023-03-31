@@ -1,0 +1,373 @@
+Test cases and outputs for ChatApp.py
+
+Heads-up: I deleted all redundant printing statements for testing purposes, such as
+printing out the whole dictionary both on client side and server side, for cleaner
+experience. If this makes grading ambiguous or you want to know what exactly happens
+within, I can provide explanation and add the print statements back at any time.
+
+Please let me know in the first place.
+
+Test case 1:
+(all combinations not needed, x to x, x to y, x to z, y to z is enough)
+
+Code:
+
+python3 ChatApp.py -s 4000
+python3 ChatApp.py -c x localhost 4000 5000
+python3 ChatApp.py -c y localhost 4000 5001
+python3 ChatApp.py -c z localhost 4000 5002
+
+x: send x hi, myself!
+x: send y hi, y from x!
+x: send z hi, z from x!
+y: send z hi, z from y!
+
+x: dereg x
+y: send x you there?
+z: send x you fine?
+
+python3 ChatApp.py -c x localhost 4000 5000 (reg again)
+x, y, z: Ctrl C
+
+
+Server output:
+>>> Server is online
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+
+user x output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> send x hi, myself!
+>>> Message sent to x.
+>>> x: hi, myself!
+>>> [Message received by x.]
+>>> send y hi, y from x!
+>>> Message sent to y.
+>>> [Message received by y.]
+>>> send z hi, z from x!
+>>> Message sent to z.
+>>> [Message received by z.]
+>>> dereg x
+>>> [You are Offline. Bye.]
+
+---offline, x registers again---
+
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+
+user y output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> x: hi, y from x!
+>>> send z hi, z from y!
+>>> [Message received by z.]
+>>> [Client table updated.]
+>>> send x you there?
+>>> Sorry, the designated user is not available now.
+
+--- x registers again---
+
+>>> [Client table updated.]
+
+user z output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> x: hi, z from x!
+>>> y: hi, z from y!
+>>> [Client table updated.]
+>>> send x you fine?
+>>> Sorry, the designated user is not available now.
+
+--- x registers again---
+
+>>> [Client table updated.]
+
+
+Test case 2:
+
+Code:
+
+python3 ChatApp.py -s 4000
+python3 ChatApp.py -c x localhost 4000 5000
+python3 ChatApp.py -c y localhost 4000 5001
+y: dereg y
+server: Ctrl C
+x: send y hello!
+
+Server output:
+>>> Server is online
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+
+user x output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+
+--- y offline, server exit ---
+
+>>> send y hello!
+>>> Sorry, the designated user is not available now.
+
+Note: This is because in my implementation, client side first checks whether the message receiver is online, if not, it will print out this message and skip rest of the operation.
+So it will not get to "retry 5 times" stage.
+
+Moreover, if you look at the write-up, it says if ack times out, the client will notify the server. So plainly sending private messages never involves the action of retrying 5 times. I implemented this strictly according to the requirement. If there are any other confusions, let me know.
+
+user y output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> dereg y
+>>> [You are Offline. Bye.]
+
+
+Test case 3:
+
+Code:
+python3 ChatApp.py -s 4000
+python3 ChatApp.py -c x localhost 4000 5000
+python3 ChatApp.py -c y localhost 4000 5001
+python3 ChatApp.py -c z localhost 4000 5002
+python3 ChatApp.py -c a localhost 4000 5003
+
+x: create_group meme
+x: join_group meme (*)
+y: join_group meme
+z: join_group meme
+
+x: send_group hello members!
+a: send z hello, you should see this when you leave group!
+
+(Note *): In the Create section of write up, it says that "To enter the group chat, the client that created the chat must also use the join command". Hence, I assumed that when any user (here x) creates a group chat, he must use join_group command to enter the group he created. Otherwise, there will just be an empty group. However, in the Homework testing section, there is no such command "join_group" for x. So I added it here.
+
+z: leave_group
+
+Server output:
+>>> Server is online
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+>>> [Client x created group meme successfully]
+>>> [Client x joined group meme]
+>>> [Client y joined group meme]
+>>> [Client z joined group meme]
+>>> [Client x sent group message: hello members!]
+>>> [Client z left group meme]
+>>> Updated current groups: {'meme': ['x', 'y']}
+
+user x output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> create_group meme
+>>> [Group meme created by Server.]
+>>> join_group meme
+>>> [Client table updated.]
+>>> [Entered group meme successfully]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> (meme) send_group hello members!
+>>> Group Message sent to server.
+>>> (meme) [Message received by Server.]
+>>> [Client table updated.]
+>>> (meme)
+
+user y output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> join_group meme
+>>> [Client table updated.]
+>>> [Entered group meme successfully]
+>>> [Client table updated.]
+>>> (meme) Group_Message x: hello members!.
+>>> [Client table updated.]
+>>> (meme)
+
+user z output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> join_group meme
+>>> [Client table updated.]
+>>> [Entered group meme successfully]
+>>> (meme) Group_Message x: hello members!.
+>>> (meme) leave_group
+>>> [Client table updated.]
+>>> [Leave group chat meme]
+>>> a: hello, you should see this when you leave group!
+
+user a output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> send z hello, you should see this when you leave group!
+>>> [Message received by z.]
+>>> [Client table updated.]
+>>> 
+
+
+Test case 4 (my own):
+
+Code:
+
+python3 ChatApp.py -s 4000
+python3 ChatApp.py -c x localhost 4000 5000
+python3 ChatApp.py -c y localhost 4000 5001
+python3 ChatApp.py -c z localhost 4000 5002
+python3 ChatApp.py -c a localhost 4000 5003
+
+x: create_group meme
+x: join_group meme
+y: join_group meme
+
+
+z: create_group bull
+z: join_group bull
+a: join_group bull
+
+y: send_group yo memes!
+a: send_group yo bulls!
+
+x: leave_group
+y: leave_group
+
+y: send a I'm first
+x: send a I'm second
+
+a: leave_group
+
+(we should expect y's message then x's)
+
+Server output:
+>>> Server is online
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+>>> Server table updated.
+>>> [Client x created group meme successfully]
+>>> [Client x joined group meme]
+>>> [Client y joined group meme]
+>>> [Client z created group bull successfully]
+>>> [Client z joined group bull]
+>>> [Client a joined group bull]
+>>> [Client y sent group message: yo memes!]
+>>> [Client a sent group message: yo bulls!]
+>>> [Client x left group meme]
+>>> Updated current groups: {'meme': ['y'], 'bull': ['z', 'a']}
+>>> [Client y left group meme]
+>>> Updated current groups: {'meme': [], 'bull': ['z', 'a']}
+>>> [Client a left group bull]
+>>> Updated current groups: {'meme': [], 'bull': ['z']}
+
+user x output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> create_group meme
+>>> [Group meme created by Server.]
+>>> join_group meme
+>>> [Client table updated.]
+>>> [Entered group meme successfully]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> (meme) Group_Message y: yo memes!.
+>>> (meme) leave_group
+>>> [Client table updated.]
+>>> [Leave group chat meme]
+>>> [Client table updated.]
+>>> send a I'm second
+>>> [Message received by a.]
+>>> [Client table updated.]
+>>> 
+
+user y output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> join_group meme
+>>> [Client table updated.]
+>>> [Entered group meme successfully]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> (meme) send_group yo memes!
+>>> Group Message sent to server.
+>>> (meme) [Message received by Server.]
+>>> [Client table updated.]
+>>> (meme) leave_group
+>>> [Client table updated.]
+>>> [Leave group chat meme]
+>>> send a I'm first
+>>> [Message received by a.]
+>>> [Client table updated.]
+>>> 
+
+user z output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> create_group bull
+>>> [Group bull created by Server.]
+>>> join_group bull
+>>> [Client table updated.]
+>>> [Entered group bull successfully]
+>>> [Client table updated.]
+>>> (bull) Group_Message a: yo bulls!.
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> (bull)
+
+user a output:
+>>> [Welcome, You are registered.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> join_group bull
+>>> [Client table updated.]
+>>> [Entered group bull successfully]
+>>> (bull) send_group yo bulls!
+>>> Group Message sent to server.
+>>> (bull) [Message received by Server.]
+>>> [Client table updated.]
+>>> [Client table updated.]
+>>> (bull) leave_group
+>>> [Client table updated.]
+>>> [Leave group chat bull]
+>>> y: I'm first
+>>> x: I'm second
+>>>
+
+As a result, everything is properly executed.
+
+
+
+
+
+
